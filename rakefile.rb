@@ -1,6 +1,5 @@
 device = "sdb"
 image_name = "new-iso-image"
-iso_name = "Fedora-15-x86_64-DVD.iso"
 
 task :default => :create_iso
 
@@ -12,11 +11,6 @@ task :sdd do
   device = "sdd"
 end
 
-task :download_fedora do
-  # http://download.fedoraproject.org/pub/fedora/linux/releases/18/Live/x86_64/Fedora-18-x86_64-Live-Desktop.iso
-  sh "wget -c http://archive.fedoraproject.org/pub/fedora/linux/releases/15/Fedora/x86_64/iso/#{iso_name}"
-end
-
 task :clean do
   sh "rm -f #{image_name}.iso"
   sh "rm -rf ./image_new ./iso"
@@ -26,26 +20,31 @@ task :install_syslinux do
   sh "yum -y install syslinux"
 end
 
-task :prepare_iso_dirs do
+def prepare_iso_dirs(iso_name)
   sh "mkdir -p ./iso"
   sh "sudo mount -ro loop #{iso_name} ./iso"
   sh "mkdir -p ./image_new"
 end
 
 desc "Create our own iso image with Fedora 15"
-task :create_iso => [:install_syslinux, :clean, :download_fedora, :prepare_iso_dirs] do
+task :create_iso => [:install_syslinux, :clean] do
+  iso_name = "Fedora-18-i386-DVD.iso"
+  sh "wget -c http://download.fedoraproject.org/pub/fedora/linux/releases/18/Fedora/x86_64/iso/#{iso_name}"
+  prepare_iso_dirs(iso_name)
   sh "cp -r ./iso/* ./image_new/"
   sh "rm -r ./image_new/isolinux"
-  sh "cp -r ./isolinux ./image_new/"
-  sh "cp ./iso/isolinux/initrd.img ./image_new/isolinux/"
-  sh "cp ./iso/isolinux/vmlinuz ./image_new/isolinux/"
-  sh "sudo umount ./iso"
-  sh "mkisofs -J -r -V #{image_name} -hide-joliet-trans-tbl -hide-rr-moved -allow-leading-dots -o #{image_name}.iso -no-emul-boot -boot-load-size 4 -c isolinux/boot.catalog -b isolinux/isolinux.bin -boot-info-table -l image_new"
-  sh "isohybrid #{image_name}.iso"
+  create_iso(image_name)
 end
 
 desc "Create our own iso image with Fedora 15 (netinstall)"
-task :create_iso_netinstall => [:install_syslinux, :clean, :download_fedora, :prepare_iso_dirs] do
+task :create_iso_netinstall => [:install_syslinux, :clean, :prepare_iso_dirs] do
+  iso_name = "Fedora-18-x86_64-netinst.iso"
+  sh "wget -c http://download.fedoraproject.org/pub/fedora/linux/releases/18/Fedora/i386/iso/#{iso_name}"
+  prepare_iso_dirs(iso_name)
+  create_iso(image_name)
+end
+
+def create_iso(image_name)
   sh "cp -r ./isolinux ./image_new/"
   sh "cp ./iso/isolinux/initrd.img ./image_new/isolinux/"
   sh "cp ./iso/isolinux/vmlinuz ./image_new/isolinux/"
