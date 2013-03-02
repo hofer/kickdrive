@@ -37,7 +37,7 @@ task :create_iso => [:install_syslinux, :clean] do
 end
 
 desc "Create our own iso image with Fedora 15 (netinstall)"
-task :create_iso_netinstall => [:install_syslinux, :clean, :prepare_iso_dirs] do
+task :create_iso_netinstall => [:install_syslinux, :clean] do
   iso_name = "Fedora-18-x86_64-netinst.iso"
   sh "wget -c http://download.fedoraproject.org/pub/fedora/linux/releases/18/Fedora/i386/iso/#{iso_name}"
   prepare_iso_dirs(iso_name)
